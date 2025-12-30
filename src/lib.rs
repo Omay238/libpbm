@@ -1,3 +1,9 @@
+#![warn(missing_docs)]
+
+//! # libpbm
+//!
+//! utilities for generating netpbm images
+
 /// # Portable BitMap File
 ///
 /// creatable BitMap file.
@@ -40,7 +46,7 @@ impl PBMFile {
     /// returns - value of pixel. false is white, true is black.
     pub fn get_pixel(&mut self, x: usize, y: usize) -> Option<bool> {
         if x < self.width && y < self.height {
-            return Some(self.pixels[y][x])
+            return Some(self.pixels[y][x]);
         }
         None
     }
@@ -61,11 +67,15 @@ impl PBMFile {
             comment_text,
             self.width,
             self.height,
-            self.pixels.iter().map(
-                |row| row.iter().map(
-                    |pixel| format!("{}", u8::from(*pixel))
-                ).collect::<Vec<String>>().join(" ")
-            ).collect::<Vec<String>>().join("\n")
+            self.pixels
+                .iter()
+                .map(|row| row
+                    .iter()
+                    .map(|pixel| format!("{}", u8::from(*pixel)))
+                    .collect::<Vec<String>>()
+                    .join(" "))
+                .collect::<Vec<String>>()
+                .join("\n")
         )
     }
 
@@ -75,7 +85,7 @@ impl PBMFile {
     pub fn to_raw(&self) -> Vec<u8> {
         let mut bits = Vec::new();
         for (row_id, row) in self.pixels.iter().enumerate() {
-            for (i, v) in row.iter().map(|x| x.clone()).collect::<Vec<bool>>().iter().enumerate() {
+            for (i, v) in row.to_vec().iter().enumerate() {
                 if bits.len() <= row_id + i / 8 {
                     bits.push(0);
                 }
@@ -83,14 +93,15 @@ impl PBMFile {
             }
         }
 
-        vec![
+        [
             &[80, 52, 10], // P4\n
             format!("{}", self.width).as_bytes(),
             &[32], // <space>
             format!("{}", self.height).as_bytes(),
             &[10], // \n
-            &bits
-        ].concat()
+            &bits,
+        ]
+        .concat()
     }
 
     /// save the image in its ASCII representation
@@ -101,7 +112,7 @@ impl PBMFile {
 
     /// save the image in its binary representation
     pub fn save_raw(&self, path: &str) -> std::io::Result<()> {
-        std::fs::write(path, &self.to_raw())?;
+        std::fs::write(path, self.to_raw())?;
         Ok(())
     }
 }
@@ -148,7 +159,7 @@ impl PGMFile {
     /// returns - value of pixel. 0 is black, 255 is white.
     pub fn get_pixel(&mut self, x: usize, y: usize) -> Option<u8> {
         if x < self.width && y < self.height {
-            return Some(self.pixels[y][x])
+            return Some(self.pixels[y][x]);
         }
         None
     }
@@ -169,11 +180,15 @@ impl PGMFile {
             comment_text,
             self.width,
             self.height,
-            self.pixels.iter().map(
-                |row| row.iter().map(
-                    |pixel| format!("{:>3}", pixel)
-                ).collect::<Vec<String>>().join(" ")
-            ).collect::<Vec<String>>().join("\n")
+            self.pixels
+                .iter()
+                .map(|row| row
+                    .iter()
+                    .map(|pixel| format!("{:>3}", pixel))
+                    .collect::<Vec<String>>()
+                    .join(" "))
+                .collect::<Vec<String>>()
+                .join("\n")
         )
     }
 
@@ -181,14 +196,15 @@ impl PGMFile {
     ///
     /// returns - binary representation of the image
     pub fn to_raw(&self) -> Vec<u8> {
-        vec![
+        [
             &[80, 53, 10], // P5\n
             format!("{}", self.width).as_bytes(),
             &[32], // <space>
             format!("{}", self.height).as_bytes(),
             &[10, 50, 53, 53, 10], // \n255\n
-            &self.pixels.iter().flatten().map(|x| x.clone()).collect::<Vec<u8>>()
-        ].concat()
+            &self.pixels.iter().flatten().copied().collect::<Vec<u8>>(),
+        ]
+        .concat()
     }
 
     /// save the image in its ASCII representation
@@ -199,7 +215,7 @@ impl PGMFile {
 
     /// save the image in its binary representation
     pub fn save_raw(&self, path: &str) -> std::io::Result<()> {
-        std::fs::write(path, &self.to_raw())?;
+        std::fs::write(path, self.to_raw())?;
         Ok(())
     }
 }
@@ -246,7 +262,7 @@ impl PPMFile {
     /// returns - color of pixel. rgb order. 0 is black, 255 is white.
     pub fn get_pixel(&mut self, x: usize, y: usize) -> Option<[u8; 3]> {
         if x < self.width && y < self.height {
-            return Some(self.pixels[y][x])
+            return Some(self.pixels[y][x]);
         }
         None
     }
@@ -267,11 +283,15 @@ impl PPMFile {
             comment_text,
             self.width,
             self.height,
-            self.pixels.iter().map(
-                |row| row.iter().map(
-                    |pixel| format!("{:>3} {:>3} {:>3}", pixel[0], pixel[1], pixel[2])
-                ).collect::<Vec<String>>().join(" ")
-            ).collect::<Vec<String>>().join("\n")
+            self.pixels
+                .iter()
+                .map(|row| row
+                    .iter()
+                    .map(|pixel| format!("{:>3} {:>3} {:>3}", pixel[0], pixel[1], pixel[2]))
+                    .collect::<Vec<String>>()
+                    .join(" "))
+                .collect::<Vec<String>>()
+                .join("\n")
         )
     }
 
@@ -279,14 +299,21 @@ impl PPMFile {
     ///
     /// returns - binary representation of the image
     pub fn to_raw(&self) -> Vec<u8> {
-        vec![
+        [
             &[80, 54, 10], // P6\n
             format!("{}", self.width).as_bytes(),
             &[32], // <space>
             format!("{}", self.height).as_bytes(),
             &[10, 50, 53, 53, 10], // \n255\n
-            &self.pixels.iter().flatten().flatten().map(|x| x.clone()).collect::<Vec<u8>>()
-        ].concat()
+            &self
+                .pixels
+                .iter()
+                .flatten()
+                .flatten()
+                .copied()
+                .collect::<Vec<u8>>(),
+        ]
+        .concat()
     }
 
     /// save the image in its ASCII representation
@@ -297,8 +324,7 @@ impl PPMFile {
 
     /// save the image in its binary representation
     pub fn save_raw(&self, path: &str) -> std::io::Result<()> {
-        std::fs::write(path, &self.to_raw())?;
+        std::fs::write(path, self.to_raw())?;
         Ok(())
     }
 }
-
