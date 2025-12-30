@@ -1,4 +1,4 @@
-use libpbm::{NetPBM, NetPAM, TupleType};
+use libpbm::{NetPAM, NetPBM, TupleType};
 
 fn main() {
     let mut pbm = NetPBM::new_pbm(2, 2);
@@ -9,7 +9,7 @@ fn main() {
     pbm.save_ascii("ascii.pbm", None).unwrap();
     pbm.save_raw("raw.pbm").unwrap();
 
-    let mut pgm = NetPBM::new_pgm(4, 2);
+    let mut pgm = NetPBM::new_pgm(4, 2, 255);
     pgm.set_pixel(0, 0, 0);
     pgm.set_pixel(1, 0, 32);
     pgm.set_pixel(2, 0, 64);
@@ -21,7 +21,7 @@ fn main() {
     pgm.save_ascii("ascii.pgm", None).unwrap();
     pgm.save_raw("raw.pgm").unwrap();
 
-    let mut ppm = NetPBM::new_ppm(4, 2);
+    let mut ppm = NetPBM::new_ppm(4, 2, 255);
     ppm.set_pixel(0, 0, [0, 0, 0]);
     ppm.set_pixel(1, 0, [0, 0, 255]);
     ppm.set_pixel(2, 0, [0, 255, 0]);

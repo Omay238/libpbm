@@ -30,13 +30,7 @@ pub struct NetPBMFile {
 pub struct NetPGMFile {
     width: usize,
     height: usize,
-    pixels: Vec<Vec<u8>>,
-}
-
-/// type for NetPGM (16 bit) files.
-pub struct NetPGMHiFile {
-    width: usize,
-    height: usize,
+    max_val: u16,
     pixels: Vec<Vec<u16>>,
 }
 
@@ -44,13 +38,7 @@ pub struct NetPGMHiFile {
 pub struct NetPPMFile {
     width: usize,
     height: usize,
-    pixels: Vec<Vec<[u8; 3]>>,
-}
-
-/// type for NetPPM (16 bit) files.
-pub struct NetPPMHiFile {
-    width: usize,
-    height: usize,
+    max_val: u16,
     pixels: Vec<Vec<[u16; 3]>>,
 }
 
@@ -134,6 +122,8 @@ impl NetPBMSaver for NetPGMFile {
             comment_text = format!("\n# {}", comment.replace("\n", "\n# "));
         }
 
+        let len = format!("{}", self.max_val).len();
+
         format!(
             "P2{}\n{} {}\n255\n{}\n",
             comment_text,
@@ -143,7 +133,7 @@ impl NetPBMSaver for NetPGMFile {
                 .iter()
                 .map(|row| row
                     .iter()
-                    .map(|pixel| format!("{:>3}", pixel))
+                    .map(|pixel| format!("{:>len$}", pixel))
                     .collect::<Vec<String>>()
                     .join(" "))
                 .collect::<Vec<String>>()
@@ -154,44 +144,17 @@ impl NetPBMSaver for NetPGMFile {
     fn to_raw(&self) -> Vec<u8> {
         [
             format!("P5\n{} {}\n255\n", self.width, self.height).as_bytes(),
-            &self.pixels.iter().flatten().copied().collect::<Vec<u8>>(),
-        ]
-        .concat()
-    }
-}
-
-impl NetPBMSaver for NetPGMHiFile {
-    fn to_ascii(&self, comment: Option<&str>) -> String {
-        let mut comment_text = String::new();
-        if let Some(comment) = comment {
-            comment_text = format!("\n# {}", comment.replace("\n", "\n# "));
-        }
-
-        format!(
-            "P2{}\n{} {}\n65535\n{}\n",
-            comment_text,
-            self.width,
-            self.height,
-            self.pixels
-                .iter()
-                .map(|row| row
-                    .iter()
-                    .map(|pixel| format!("{:>5}", pixel))
-                    .collect::<Vec<String>>()
-                    .join(" "))
-                .collect::<Vec<String>>()
-                .join("\n")
-        )
-    }
-
-    fn to_raw(&self) -> Vec<u8> {
-        [
-            format!("P5\n{} {}\n65535\n", self.width, self.height).as_bytes(),
             &self
                 .pixels
                 .iter()
                 .flatten()
-                .flat_map(|x| [(x >> 8) as u8, (x & 0xff) as u8])
+                .flat_map(|x| {
+                    if self.max_val > 255 {
+                        vec![(x >> 8) as u8, (x & 0xff) as u8]
+                    } else {
+                        vec![*x as u8]
+                    }
+                })
                 .collect::<Vec<u8>>(),
         ]
         .concat()
@@ -205,6 +168,8 @@ impl NetPBMSaver for NetPPMFile {
             comment_text = format!("\n# {}", comment.replace("\n", "\n# "));
         }
 
+        let len = format!("{}", self.max_val).len();
+
         format!(
             "P3{}\n{} {}\n255\n{}\n",
             comment_text,
@@ -214,7 +179,10 @@ impl NetPBMSaver for NetPPMFile {
                 .iter()
                 .map(|row| row
                     .iter()
-                    .map(|pixel| format!("{:>3} {:>3} {:>3}", pixel[0], pixel[1], pixel[2]))
+                    .map(|pixel| format!(
+                        "{:>len$} {:>len$} {:>len$}",
+                        pixel[0], pixel[1], pixel[2]
+                    ))
                     .collect::<Vec<String>>()
                     .join(" "))
                 .collect::<Vec<String>>()
@@ -230,46 +198,13 @@ impl NetPBMSaver for NetPPMFile {
                 .iter()
                 .flatten()
                 .flatten()
-                .copied()
-                .collect::<Vec<u8>>(),
-        ]
-        .concat()
-    }
-}
-
-impl NetPBMSaver for NetPPMHiFile {
-    fn to_ascii(&self, comment: Option<&str>) -> String {
-        let mut comment_text = String::new();
-        if let Some(comment) = comment {
-            comment_text = format!("\n# {}", comment.replace("\n", "\n# "));
-        }
-
-        format!(
-            "P3{}\n{} {}\n65535\n{}\n",
-            comment_text,
-            self.width,
-            self.height,
-            self.pixels
-                .iter()
-                .map(|row| row
-                    .iter()
-                    .map(|pixel| format!("{:>5} {:>5} {:>5}", pixel[0], pixel[1], pixel[2]))
-                    .collect::<Vec<String>>()
-                    .join(" "))
-                .collect::<Vec<String>>()
-                .join("\n")
-        )
-    }
-
-    fn to_raw(&self) -> Vec<u8> {
-        [
-            format!("P6\n{} {}\n65535\n", self.width, self.height).as_bytes(),
-            &self
-                .pixels
-                .iter()
-                .flatten()
-                .flatten()
-                .flat_map(|x| [(x >> 8) as u8, (x & 0xff) as u8])
+                .flat_map(|x| {
+                    if self.max_val > 255 {
+                        vec![(x >> 8) as u8, (x & 0xff) as u8]
+                    } else {
+                        vec![*x as u8]
+                    }
+                })
                 .collect::<Vec<u8>>(),
         ]
         .concat()
@@ -320,10 +255,11 @@ impl NetPBM<NetPGMFile> {
     ///
     /// - width      - immutable size for image width.
     /// - height     - immutable size for image height.
-    pub fn new_pgm(width: usize, height: usize) -> Self {
+    pub fn new_pgm(width: usize, height: usize, max_val: u16) -> Self {
         let class = NetPGMFile {
             width,
             height,
+            max_val,
             pixels: vec![vec![0; width]; height],
         };
         Self { class }
@@ -333,48 +269,9 @@ impl NetPBM<NetPGMFile> {
     ///
     /// - x     - x position of pixel. does nothing if not in image.
     /// - y     - y position of pixel. does nothing if not in image.
-    /// - value - value of pixel. 0 is black, 255 is white.
-    pub fn set_pixel(&mut self, x: usize, y: usize, value: u8) {
-        if x < self.class.width && y < self.class.height {
-            self.class.pixels[y][x] = value;
-        }
-    }
-
-    /// get a pixels value.
-    ///
-    /// - x     - x position of pixel. does nothing if not in image.
-    /// - y     - y position of pixel. does nothing if not in image.
-    ///
-    /// returns - value of pixel. 0 is black, 255 is white.
-    pub fn get_pixel(&mut self, x: usize, y: usize) -> Option<u8> {
-        if x < self.class.width && y < self.class.height {
-            return Some(self.class.pixels[y][x]);
-        }
-        None
-    }
-}
-
-impl NetPBM<NetPGMHiFile> {
-    /// create a new PGM File (16 bit).
-    ///
-    /// - width      - immutable size for image width.
-    /// - height     - immutable size for image height.
-    pub fn new_pgm_hi(width: usize, height: usize) -> Self {
-        let class = NetPGMHiFile {
-            width,
-            height,
-            pixels: vec![vec![0; width]; height],
-        };
-        Self { class }
-    }
-
-    /// set a pixels value.
-    ///
-    /// - x     - x position of pixel. does nothing if not in image.
-    /// - y     - y position of pixel. does nothing if not in image.
-    /// - value - value of pixel. 0 is black, 65536 is white.
+    /// - value - value of pixel. 0 is black, max_val is white.
     pub fn set_pixel(&mut self, x: usize, y: usize, value: u16) {
-        if x < self.class.width && y < self.class.height {
+        if x < self.class.width && y < self.class.height && value <= self.class.max_val {
             self.class.pixels[y][x] = value;
         }
     }
@@ -384,7 +281,7 @@ impl NetPBM<NetPGMHiFile> {
     /// - x     - x position of pixel. does nothing if not in image.
     /// - y     - y position of pixel. does nothing if not in image.
     ///
-    /// returns - value of pixel. 0 is black, 65536 is white.
+    /// returns - value of pixel. 0 is black, max_val is white.
     pub fn get_pixel(&mut self, x: usize, y: usize) -> Option<u16> {
         if x < self.class.width && y < self.class.height {
             return Some(self.class.pixels[y][x]);
@@ -398,10 +295,11 @@ impl NetPBM<NetPPMFile> {
     ///
     /// - width      - immutable size for image width.
     /// - height     - immutable size for image height.
-    pub fn new_ppm(width: usize, height: usize) -> Self {
+    pub fn new_ppm(width: usize, height: usize, max_val: u16) -> Self {
         let class = NetPPMFile {
             width,
             height,
+            max_val,
             pixels: vec![vec![[0; 3]; width]; height],
         };
         Self { class }
@@ -411,48 +309,12 @@ impl NetPBM<NetPPMFile> {
     ///
     /// - x     - x position of pixel. does nothing if not in image.
     /// - y     - y position of pixel. does nothing if not in image.
-    /// - color - color of pixel. rgb order. 0 is black, 255 is white.
-    pub fn set_pixel(&mut self, x: usize, y: usize, color: [u8; 3]) {
-        if x < self.class.width && y < self.class.height {
-            self.class.pixels[y][x] = color;
-        }
-    }
-
-    /// get a pixels color.
-    ///
-    /// - x     - x position of pixel. does nothing if not in image.
-    /// - y     - y position of pixel. does nothing if not in image.
-    ///
-    /// returns - color of pixel. rgb order. 0 is black, 255 is white.
-    pub fn get_pixel(&mut self, x: usize, y: usize) -> Option<[u8; 3]> {
-        if x < self.class.width && y < self.class.height {
-            return Some(self.class.pixels[y][x]);
-        }
-        None
-    }
-}
-
-impl NetPBM<NetPPMHiFile> {
-    /// create a new PPM File (16 bit).
-    ///
-    /// - width      - immutable size for image width.
-    /// - height     - immutable size for image height.
-    pub fn new_ppm_hi(width: usize, height: usize) -> Self {
-        let class = NetPPMHiFile {
-            width,
-            height,
-            pixels: vec![vec![[0; 3]; width]; height],
-        };
-        Self { class }
-    }
-
-    /// set a pixels color.
-    ///
-    /// - x     - x position of pixel. does nothing if not in image.
-    /// - y     - y position of pixel. does nothing if not in image.
-    /// - color - color of pixel. rgb order. 0 is black, 65536 is white.
+    /// - color - color of pixel. rgb order. 0 is black, max_val is white.
     pub fn set_pixel(&mut self, x: usize, y: usize, color: [u16; 3]) {
-        if x < self.class.width && y < self.class.height {
+        if x < self.class.width
+            && y < self.class.height
+            && color.iter().all(|x| x <= &self.class.max_val)
+        {
             self.class.pixels[y][x] = color;
         }
     }
@@ -462,7 +324,7 @@ impl NetPBM<NetPPMHiFile> {
     /// - x     - x position of pixel. does nothing if not in image.
     /// - y     - y position of pixel. does nothing if not in image.
     ///
-    /// returns - color of pixel. rgb order. 0 is black, 65536 is white.
+    /// returns - color of pixel. rgb order. 0 is black, max_val is white.
     pub fn get_pixel(&mut self, x: usize, y: usize) -> Option<[u16; 3]> {
         if x < self.class.width && y < self.class.height {
             return Some(self.class.pixels[y][x]);
