@@ -1,7 +1,7 @@
-use libpbm::NetPBM;
+use libpbm::{NetPBM, NetPAM, TupleType};
 
 fn main() {
-    let mut pbm = NetPBM::new_pbm(2, 2, false);
+    let mut pbm = NetPBM::new_pbm(2, 2);
     pbm.set_pixel(0, 0, false);
     pbm.set_pixel(1, 0, true);
     pbm.set_pixel(0, 1, true);
@@ -9,7 +9,7 @@ fn main() {
     pbm.save_ascii("ascii.pbm", None).unwrap();
     pbm.save_raw("raw.pbm").unwrap();
 
-    let mut pgm = NetPBM::new_pgm(4, 2, 255);
+    let mut pgm = NetPBM::new_pgm(4, 2);
     pgm.set_pixel(0, 0, 0);
     pgm.set_pixel(1, 0, 32);
     pgm.set_pixel(2, 0, 64);
@@ -21,7 +21,7 @@ fn main() {
     pgm.save_ascii("ascii.pgm", None).unwrap();
     pgm.save_raw("raw.pgm").unwrap();
 
-    let mut ppm = NetPBM::new_ppm(4, 2, [255, 255, 255]);
+    let mut ppm = NetPBM::new_ppm(4, 2);
     ppm.set_pixel(0, 0, [0, 0, 0]);
     ppm.set_pixel(1, 0, [0, 0, 255]);
     ppm.set_pixel(2, 0, [0, 255, 0]);
@@ -34,7 +34,7 @@ fn main() {
     ppm.save_raw("raw.ppm").unwrap();
 
     let s = 512;
-    let mut big_ppm = NetPBM::new_ppm_hi(s, s, [65535, 65535, 65535]);
+    let mut big_ppm = NetPAM::new(s, s, 65535, TupleType::RGB);
     for x in 0..s {
         for y in 0..s {
             let dx = x as i32 - (s / 2) as i32;
@@ -75,10 +75,8 @@ fn main() {
                 ((color_1[2] + m) * 65535.0) as u16,
             ];
 
-            big_ppm.set_pixel(x, y, color);
+            big_ppm.set_pixel(x, y, color.to_vec());
         }
     }
-    big_ppm
-        .save_raw("big.ppm")
-        .unwrap();
+    big_ppm.save_raw("big.pam").unwrap();
 }

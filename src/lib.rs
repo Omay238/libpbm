@@ -2,11 +2,11 @@
 
 //! # libpbm
 //!
-//! utilities for generating netpbm images
+//! utilities for generating netpbm images.
 
 /// NetPBMSaver
 ///
-/// implements to_ascii and to_raw for saving
+/// implements to_ascii and to_raw for saving.
 pub trait NetPBMSaver {
     /// create a text representation of the image file. an optional comment in the header.
     fn to_ascii(&self, comment: Option<&str>) -> String;
@@ -14,40 +14,40 @@ pub trait NetPBMSaver {
     fn to_raw(&self) -> Vec<u8>;
 }
 
-/// universal type for all netpbm files
+/// universal type for all netpbm files.
 pub struct NetPBM<Class: NetPBMSaver> {
     class: Class,
 }
 
-/// type for NetPBM files
+/// type for NetPBM files.
 pub struct NetPBMFile {
     width: usize,
     height: usize,
     pixels: Vec<Vec<bool>>,
 }
 
-/// type for NetPGM files
+/// type for NetPGM files.
 pub struct NetPGMFile {
     width: usize,
     height: usize,
     pixels: Vec<Vec<u8>>,
 }
 
-/// type for NetPGM (16 bit) files
+/// type for NetPGM (16 bit) files.
 pub struct NetPGMHiFile {
     width: usize,
     height: usize,
     pixels: Vec<Vec<u16>>,
 }
 
-/// type for NetPPM files
+/// type for NetPPM files.
 pub struct NetPPMFile {
     width: usize,
     height: usize,
     pixels: Vec<Vec<[u8; 3]>>,
 }
 
-/// type for NetPPM (16 bit) files
+/// type for NetPPM (16 bit) files.
 pub struct NetPPMHiFile {
     width: usize,
     height: usize,
@@ -55,29 +55,29 @@ pub struct NetPPMHiFile {
 }
 
 impl<Class: NetPBMSaver> NetPBM<Class> {
-    /// convert the image to its ASCII representation
+    /// convert the image to its ASCII representation.
     ///
     /// - comment - optional value to add a comment in the header.
     ///
-    /// returns - ASCII representation of the image
+    /// returns - ASCII representation of the image.
     pub fn to_ascii(&self, comment: Option<&str>) -> String {
         self.class.to_ascii(comment)
     }
 
-    /// convert the image to its binary representation
+    /// convert the image to its binary representation.
     ///
-    /// returns - binary representation of the image
+    /// returns - binary representation of the image.
     pub fn to_raw(&self) -> Vec<u8> {
         self.class.to_raw()
     }
 
-    /// save the image in its ASCII representation
+    /// save the image in its ASCII representation.
     pub fn save_ascii(&self, path: &str, comment: Option<&str>) -> std::io::Result<()> {
         std::fs::write(path, self.class.to_ascii(comment))?;
         Ok(())
     }
 
-    /// save the image in its binary representation
+    /// save the image in its binary representation.
     pub fn save_raw(&self, path: &str) -> std::io::Result<()> {
         std::fs::write(path, self.class.to_raw())?;
         Ok(())
@@ -120,11 +120,7 @@ impl NetPBMSaver for NetPBMFile {
         }
 
         [
-            &[80, 52, 10], // P4\n
-            format!("{}", self.width).as_bytes(),
-            &[32], // <space>
-            format!("{}", self.height).as_bytes(),
-            &[10], // \n
+            format!("P4\n{} {}\n", self.width, self.height).as_bytes(),
             &bits,
         ]
         .concat()
@@ -157,11 +153,7 @@ impl NetPBMSaver for NetPGMFile {
 
     fn to_raw(&self) -> Vec<u8> {
         [
-            &[80, 53, 10], // P5\n
-            format!("{}", self.width).as_bytes(),
-            &[32], // <space>
-            format!("{}", self.height).as_bytes(),
-            &[10, 50, 53, 53, 10], // \n255\n
+            format!("P5\n{} {}\n255\n", self.width, self.height).as_bytes(),
             &self.pixels.iter().flatten().copied().collect::<Vec<u8>>(),
         ]
         .concat()
@@ -194,11 +186,7 @@ impl NetPBMSaver for NetPGMHiFile {
 
     fn to_raw(&self) -> Vec<u8> {
         [
-            &[80, 53, 10], // P5\n
-            format!("{}", self.width).as_bytes(),
-            &[32], // <space>
-            format!("{}", self.height).as_bytes(),
-            &[10, 54, 53, 53, 51, 53, 10], // \n65535\n
+            format!("P5\n{} {}\n65535\n", self.width, self.height).as_bytes(),
             &self
                 .pixels
                 .iter()
@@ -236,11 +224,7 @@ impl NetPBMSaver for NetPPMFile {
 
     fn to_raw(&self) -> Vec<u8> {
         [
-            &[80, 54, 10], // P6\n
-            format!("{}", self.width).as_bytes(),
-            &[32], // <space>
-            format!("{}", self.height).as_bytes(),
-            &[10, 50, 53, 53, 10], // \n255\n
+            format!("P6\n{} {}\n255\n", self.width, self.height).as_bytes(),
             &self
                 .pixels
                 .iter()
@@ -279,11 +263,7 @@ impl NetPBMSaver for NetPPMHiFile {
 
     fn to_raw(&self) -> Vec<u8> {
         [
-            &[80, 54, 10], // P6\n
-            format!("{}", self.width).as_bytes(),
-            &[32], // <space>
-            format!("{}", self.height).as_bytes(),
-            &[10, 54, 53, 53, 51, 53, 10], // \n65535\n
+            format!("P6\n{} {}\n65535\n", self.width, self.height).as_bytes(),
             &self
                 .pixels
                 .iter()
@@ -299,19 +279,18 @@ impl NetPBMSaver for NetPPMHiFile {
 impl NetPBM<NetPBMFile> {
     /// create a new PBM File.
     ///
-    /// - width      - immutable size for image width
-    /// - height     - immutable size for image height
-    /// - background - default background color. false is white, true is black.
-    pub fn new_pbm(width: usize, height: usize, background: bool) -> Self {
+    /// - width      - immutable size for image width.
+    /// - height     - immutable size for image height.
+    pub fn new_pbm(width: usize, height: usize) -> Self {
         let class = NetPBMFile {
             width,
             height,
-            pixels: vec![vec![background; width]; height],
+            pixels: vec![vec![false; width]; height],
         };
         Self { class }
     }
 
-    /// set a pixels value
+    /// set a pixels value.
     ///
     /// - x     - x position of pixel. does nothing if not in image.
     /// - y     - y position of pixel. does nothing if not in image.
@@ -322,7 +301,7 @@ impl NetPBM<NetPBMFile> {
         }
     }
 
-    /// get a pixels value
+    /// get a pixels value.
     ///
     /// - x     - x position of pixel. does nothing if not in image.
     /// - y     - y position of pixel. does nothing if not in image.
@@ -339,19 +318,18 @@ impl NetPBM<NetPBMFile> {
 impl NetPBM<NetPGMFile> {
     /// create a new PGM File.
     ///
-    /// - width      - immutable size for image width
-    /// - height     - immutable size for image height
-    /// - background - default background color. 0 is black, 255 is white.
-    pub fn new_pgm(width: usize, height: usize, background: u8) -> Self {
+    /// - width      - immutable size for image width.
+    /// - height     - immutable size for image height.
+    pub fn new_pgm(width: usize, height: usize) -> Self {
         let class = NetPGMFile {
             width,
             height,
-            pixels: vec![vec![background; width]; height],
+            pixels: vec![vec![0; width]; height],
         };
         Self { class }
     }
 
-    /// set a pixels value
+    /// set a pixels value.
     ///
     /// - x     - x position of pixel. does nothing if not in image.
     /// - y     - y position of pixel. does nothing if not in image.
@@ -362,7 +340,7 @@ impl NetPBM<NetPGMFile> {
         }
     }
 
-    /// get a pixels value
+    /// get a pixels value.
     ///
     /// - x     - x position of pixel. does nothing if not in image.
     /// - y     - y position of pixel. does nothing if not in image.
@@ -379,19 +357,18 @@ impl NetPBM<NetPGMFile> {
 impl NetPBM<NetPGMHiFile> {
     /// create a new PGM File (16 bit).
     ///
-    /// - width      - immutable size for image width
-    /// - height     - immutable size for image height
-    /// - background - default background color. 0 is black, 65536 is white.
-    pub fn new_pgm_hi(width: usize, height: usize, background: u16) -> Self {
+    /// - width      - immutable size for image width.
+    /// - height     - immutable size for image height.
+    pub fn new_pgm_hi(width: usize, height: usize) -> Self {
         let class = NetPGMHiFile {
             width,
             height,
-            pixels: vec![vec![background; width]; height],
+            pixels: vec![vec![0; width]; height],
         };
         Self { class }
     }
 
-    /// set a pixels value
+    /// set a pixels value.
     ///
     /// - x     - x position of pixel. does nothing if not in image.
     /// - y     - y position of pixel. does nothing if not in image.
@@ -402,7 +379,7 @@ impl NetPBM<NetPGMHiFile> {
         }
     }
 
-    /// get a pixels value
+    /// get a pixels value.
     ///
     /// - x     - x position of pixel. does nothing if not in image.
     /// - y     - y position of pixel. does nothing if not in image.
@@ -419,19 +396,18 @@ impl NetPBM<NetPGMHiFile> {
 impl NetPBM<NetPPMFile> {
     /// create a new PPM File.
     ///
-    /// - width      - immutable size for image width
-    /// - height     - immutable size for image height
-    /// - background - default background color. rgb order. 0 is black, 255 is white.
-    pub fn new_ppm(width: usize, height: usize, background: [u8; 3]) -> Self {
+    /// - width      - immutable size for image width.
+    /// - height     - immutable size for image height.
+    pub fn new_ppm(width: usize, height: usize) -> Self {
         let class = NetPPMFile {
             width,
             height,
-            pixels: vec![vec![background; width]; height],
+            pixels: vec![vec![[0; 3]; width]; height],
         };
         Self { class }
     }
 
-    /// set a pixels color
+    /// set a pixels color.
     ///
     /// - x     - x position of pixel. does nothing if not in image.
     /// - y     - y position of pixel. does nothing if not in image.
@@ -442,7 +418,7 @@ impl NetPBM<NetPPMFile> {
         }
     }
 
-    /// get a pixels color
+    /// get a pixels color.
     ///
     /// - x     - x position of pixel. does nothing if not in image.
     /// - y     - y position of pixel. does nothing if not in image.
@@ -459,19 +435,18 @@ impl NetPBM<NetPPMFile> {
 impl NetPBM<NetPPMHiFile> {
     /// create a new PPM File (16 bit).
     ///
-    /// - width      - immutable size for image width
-    /// - height     - immutable size for image height
-    /// - background - default background color. rgb order. 0 is black, 65536 is white.
-    pub fn new_ppm_hi(width: usize, height: usize, background: [u16; 3]) -> Self {
+    /// - width      - immutable size for image width.
+    /// - height     - immutable size for image height.
+    pub fn new_ppm_hi(width: usize, height: usize) -> Self {
         let class = NetPPMHiFile {
             width,
             height,
-            pixels: vec![vec![background; width]; height],
+            pixels: vec![vec![[0; 3]; width]; height],
         };
         Self { class }
     }
 
-    /// set a pixels color
+    /// set a pixels color.
     ///
     /// - x     - x position of pixel. does nothing if not in image.
     /// - y     - y position of pixel. does nothing if not in image.
@@ -482,7 +457,7 @@ impl NetPBM<NetPPMHiFile> {
         }
     }
 
-    /// get a pixels color
+    /// get a pixels color.
     ///
     /// - x     - x position of pixel. does nothing if not in image.
     /// - y     - y position of pixel. does nothing if not in image.
@@ -493,5 +468,128 @@ impl NetPBM<NetPPMHiFile> {
             return Some(self.class.pixels[y][x]);
         }
         None
+    }
+}
+
+/// image types for NetPAM files.
+pub enum TupleType {
+    /// like NetPBM.
+    BlackAndWhite,
+    /// like NetPGM.
+    Grayscale,
+    /// like NetPPM.
+    RGB,
+    /// like NetPBM, but with transparency.
+    BlackAndWhiteAlpha,
+    /// like NetPGM, but with transparency.
+    GrayscaleAlpha,
+    /// like NetPPM, but with transparency.
+    RGBAlpha,
+}
+
+/// type for NetPAM files.
+pub struct NetPAM {
+    width: usize,
+    height: usize,
+    depth: usize,
+    max_val: u16,
+    tuple_type: TupleType,
+    pixels: Vec<Vec<Vec<u16>>>,
+}
+
+impl NetPAM {
+    /// create a new NetPAM image
+    pub fn new(width: usize, height: usize, max_val: u16, tuple_type: TupleType) -> Self {
+        let depth = match tuple_type {
+            TupleType::BlackAndWhite => 1,
+            TupleType::Grayscale => 1,
+            TupleType::RGB => 3,
+            TupleType::BlackAndWhiteAlpha => 2,
+            TupleType::GrayscaleAlpha => 2,
+            TupleType::RGBAlpha => 4,
+        };
+
+        let pixels = vec![vec![vec![0; depth]; width]; height];
+
+        Self {
+            width,
+            height,
+            depth,
+            max_val,
+            tuple_type,
+            pixels,
+        }
+    }
+
+    /// set a pixels color.
+    ///
+    /// - x     - x position of pixel. does nothing if not in image.
+    /// - y     - y position of pixel. does nothing if not in image.
+    /// - color - color of pixel. (rgb|v)a order. 0 is black, max_val is white.
+    pub fn set_pixel(&mut self, x: usize, y: usize, color: Vec<u16>) {
+        if x < self.width
+            && y < self.height
+            && color.len() == self.depth
+            && color.iter().all(|x| x <= &self.max_val)
+        {
+            self.pixels[y][x] = color;
+        }
+    }
+
+    /// get a pixels color.
+    ///
+    /// - x     - x position of pixel. does nothing if not in image.
+    /// - y     - y position of pixel. does nothing if not in image.
+    ///
+    /// returns - color of pixel. (rgb|v)a order. 0 is black, max_val is white.
+    pub fn get_pixel(&mut self, x: usize, y: usize) -> Option<Vec<u16>> {
+        if x < self.width && y < self.height {
+            return Some(self.pixels[y][x].clone());
+        }
+        None
+    }
+
+    /// convert the image to its binary representation.
+    ///
+    /// returns - binary representation of the image.
+    pub fn to_raw(&self) -> Vec<u8> {
+        [
+            format!(
+                "P7\nWIDTH {}\nHEIGHT {}\nDEPTH {}\nMAXVAL {}\nTUPLTYPE {}\nENDHDR\n",
+                self.width,
+                self.height,
+                self.depth,
+                self.max_val,
+                match self.tuple_type {
+                    TupleType::BlackAndWhite => "BLACKANDWHITE",
+                    TupleType::Grayscale => "GRAYSCALE",
+                    TupleType::RGB => "RGB",
+                    TupleType::BlackAndWhiteAlpha => "BLACKANDWHITE_ALPHA",
+                    TupleType::GrayscaleAlpha => "GRAYSCALE_ALPHA",
+                    TupleType::RGBAlpha => "RGB_ALPHA",
+                },
+            )
+            .as_bytes(),
+            &self
+                .pixels
+                .iter()
+                .flatten()
+                .flatten()
+                .flat_map(|x| {
+                    if self.max_val > 255 {
+                        vec![(x >> 8) as u8, (x & 0xff) as u8]
+                    } else {
+                        vec![*x as u8]
+                    }
+                })
+                .collect::<Vec<u8>>(),
+        ]
+        .concat()
+    }
+
+    /// save the image in its binary representation.
+    pub fn save_raw(&self, path: &str) -> std::io::Result<()> {
+        std::fs::write(path, self.to_raw())?;
+        Ok(())
     }
 }
