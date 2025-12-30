@@ -176,7 +176,7 @@ impl NetPBMSaver for NetPGMHiFile {
         }
 
         format!(
-            "P2{}\n{} {}\n65536\n{}\n",
+            "P2{}\n{} {}\n65535\n{}\n",
             comment_text,
             self.width,
             self.height,
@@ -198,13 +198,12 @@ impl NetPBMSaver for NetPGMHiFile {
             format!("{}", self.width).as_bytes(),
             &[32], // <space>
             format!("{}", self.height).as_bytes(),
-            &[10, 54, 53, 53, 51, 54, 10], // \n65536\n
+            &[10, 54, 53, 53, 51, 53, 10], // \n65535\n
             &self
                 .pixels
                 .iter()
                 .flatten()
-                .map(|x| [(x >> 8) as u8, (x & 0xff) as u8])
-                .flatten()
+                .flat_map(|x| [(x >> 8) as u8, (x & 0xff) as u8])
                 .collect::<Vec<u8>>(),
         ]
         .concat()
@@ -262,7 +261,7 @@ impl NetPBMSaver for NetPPMHiFile {
         }
 
         format!(
-            "P3{}\n{} {}\n65536\n{}\n",
+            "P3{}\n{} {}\n65535\n{}\n",
             comment_text,
             self.width,
             self.height,
@@ -284,20 +283,18 @@ impl NetPBMSaver for NetPPMHiFile {
             format!("{}", self.width).as_bytes(),
             &[32], // <space>
             format!("{}", self.height).as_bytes(),
-            &[10, 54, 53, 53, 51, 54, 10], // \n65536\n
+            &[10, 54, 53, 53, 51, 53, 10], // \n65535\n
             &self
                 .pixels
                 .iter()
                 .flatten()
                 .flatten()
-                .map(|x| [(x >> 8) as u8, (x & 0xff) as u8])
-                .flatten()
+                .flat_map(|x| [(x >> 8) as u8, (x & 0xff) as u8])
                 .collect::<Vec<u8>>(),
         ]
         .concat()
     }
 }
-
 
 impl NetPBM<NetPBMFile> {
     /// create a new PBM File.

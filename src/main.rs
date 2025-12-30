@@ -34,7 +34,7 @@ fn main() {
     ppm.save_raw("raw.ppm").unwrap();
 
     let s = 512;
-    let mut big_ppm = NetPBM::new_ppm(s, s, [255, 255, 255]);
+    let mut big_ppm = NetPBM::new_ppm_hi(s, s, [65535, 65535, 65535]);
     for x in 0..s {
         for y in 0..s {
             let dx = x as i32 - (s / 2) as i32;
@@ -70,15 +70,15 @@ fn main() {
 
             let m = value - chroma;
             let color = [
-                ((color_1[0] + m) * 255.0) as u8,
-                ((color_1[1] + m) * 255.0) as u8,
-                ((color_1[2] + m) * 255.0) as u8,
+                ((color_1[0] + m) * 65535.0) as u16,
+                ((color_1[1] + m) * 65535.0) as u16,
+                ((color_1[2] + m) * 65535.0) as u16,
             ];
 
             big_ppm.set_pixel(x, y, color);
         }
     }
     big_ppm
-        .save_ascii("big.ppm", Some("wow, this is a big image!"))
+        .save_raw("big.ppm")
         .unwrap();
 }
