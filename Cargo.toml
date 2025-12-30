@@ -1,6 +1,6 @@
 [package]
 name = "libpbm"
-version = "0.3.1"
+version = "0.3.2"
 edition = "2024"
 license = "MIT"
 description = "a library for generating netpbm images"
@@ -8,5 +8,6 @@ homepage = "https://github.com/Omay238/libpbm"
 repository = "https://github.com/Omay238/libpbm"
 readme = "README.md"
 documentation = "https://docs.rs/libpbm/latest/libpbm"
+exclude = ["/images"]
 
 [dependencies]
