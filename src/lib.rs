@@ -125,10 +125,11 @@ impl NetPBMSaver for NetPGMFile {
         let len = format!("{}", self.max_val).len();
 
         format!(
-            "P2{}\n{} {}\n255\n{}\n",
+            "P2{}\n{} {}\n{}\n{}\n",
             comment_text,
             self.width,
             self.height,
+            self.max_val,
             self.pixels
                 .iter()
                 .map(|row| row
@@ -143,7 +144,7 @@ impl NetPBMSaver for NetPGMFile {
 
     fn to_raw(&self) -> Vec<u8> {
         [
-            format!("P5\n{} {}\n255\n", self.width, self.height).as_bytes(),
+            format!("P5\n{} {}\n{}\n", self.width, self.height, self.max_val).as_bytes(),
             &self
                 .pixels
                 .iter()
@@ -171,10 +172,11 @@ impl NetPBMSaver for NetPPMFile {
         let len = format!("{}", self.max_val).len();
 
         format!(
-            "P3{}\n{} {}\n255\n{}\n",
+            "P3{}\n{} {}\n{}\n{}\n",
             comment_text,
             self.width,
             self.height,
+            self.max_val,
             self.pixels
                 .iter()
                 .map(|row| row
@@ -192,7 +194,7 @@ impl NetPBMSaver for NetPPMFile {
 
     fn to_raw(&self) -> Vec<u8> {
         [
-            format!("P6\n{} {}\n255\n", self.width, self.height).as_bytes(),
+            format!("P6\n{} {}\n{}\n", self.width, self.height, self.max_val).as_bytes(),
             &self
                 .pixels
                 .iter()
