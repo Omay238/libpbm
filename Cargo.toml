@@ -1,6 +1,6 @@
 [package]
 name = "libpbm"
-version = "0.5.0"
+version = "0.6.0"
 edition = "2024"
 license = "MIT"
 description = "a library for generating netpbm images"

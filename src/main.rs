@@ -1,4 +1,4 @@
-use libpbm::{NetPAM, NetPBM, TupleType};
+use libpbm::*;
 
 fn main() {
     let mut pbm = NetPBM::new_pbm(2, 2);
@@ -79,4 +79,9 @@ fn main() {
         }
     }
     big_ppm.save_raw("big.pam").unwrap();
+
+    let loaded = load_pbm("images/raw.pbm");
+    loaded.save_ascii("ascii.pbm", None).unwrap();
+    let loaded = load_pbm("images/ascii.pbm");
+    loaded.save_raw("raw.pbm").unwrap();
 }

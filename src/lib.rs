@@ -355,7 +355,7 @@ pub enum TupleType {
         depth: u16,
         /// the name used in the header. SHOULD BE UNIQUE!
         tuple_type: &'static str,
-    }
+    },
 }
 
 impl TupleType {
@@ -395,7 +395,7 @@ pub struct NetPAM {
 }
 
 impl NetPAM {
-    /// create a new NetPAM image
+    /// create a new NetPAM image.
     pub fn new(width: usize, height: usize, max_val: u16, tuple_type: TupleType) -> Self {
         let depth = tuple_type.get_depth() as usize;
         let pixels = vec![vec![vec![0; depth]; width]; height];
@@ -473,5 +473,108 @@ impl NetPAM {
     pub fn save_raw(&self, path: &str) -> std::io::Result<()> {
         std::fs::write(path, self.to_raw())?;
         Ok(())
+    }
+}
+
+/// load a pbm file from a path.  
+/// either P1 or P4
+pub fn load_pbm(path: &str) -> NetPBM<NetPBMFile> {
+    let file = std::fs::read(path).unwrap();
+    let mut file_iter = file.iter();
+
+    let is_binary = file.starts_with(b"P4");
+    let mut width = None;
+    let mut height = None;
+
+    while width.is_none() || height.is_none() {
+        let line: Vec<_> = file_iter.by_ref().take_while(|x| x != &&10).collect();
+        let mut split = line.split(|x| x == &&32);
+
+        if let Some(w) = split.next() {
+            if let Ok(w_var) = String::from_utf8(w.iter().copied().copied().collect())
+                .unwrap()
+                .parse::<usize>()
+            {
+                width = Some(w_var);
+            }
+        }
+
+        if let Some(h) = split.next() {
+            if let Ok(h_var) = String::from_utf8(h.iter().copied().copied().collect())
+                .unwrap()
+                .parse::<usize>()
+            {
+                height = Some(h_var);
+            }
+        }
+    }
+
+    let width = width.unwrap();
+    let height = height.unwrap();
+
+    let mut pixels = vec![vec![]];
+    let mut num_bits: usize = 0;
+
+    if is_binary {
+        for byte in file_iter {
+            if num_bits > width {
+                pixels.push(vec![]);
+                num_bits = 0;
+            } else {
+                num_bits += 8;
+            }
+
+            let len = pixels.len();
+
+            if num_bits - width >= 1 {
+                pixels[len - 1].push(byte & 0b10000000 != 0)
+            }
+            if num_bits - width >= 2 {
+                pixels[len - 1].push(byte & 0b01000000 != 0)
+            }
+            if num_bits - width >= 3 {
+                pixels[len - 1].push(byte & 0b00100000 != 0)
+            }
+            if num_bits - width >= 4 {
+                pixels[len - 1].push(byte & 0b00010000 != 0)
+            }
+            if num_bits - width >= 5 {
+                pixels[len - 1].push(byte & 0b00001000 != 0)
+            }
+            if num_bits - width >= 6 {
+                pixels[len - 1].push(byte & 0b00000100 != 0)
+            }
+            if num_bits - width >= 7 {
+                pixels[len - 1].push(byte & 0b00000010 != 0)
+            }
+            if num_bits - width >= 8 {
+                pixels[len - 1].push(byte & 0b00000001 != 0)
+            }
+        }
+    } else {
+        for byte in file_iter {
+            if num_bits > width {
+                pixels.push(vec![]);
+                num_bits = 0;
+            } else {
+                num_bits += 1;
+            }
+
+            let len = pixels.len();
+
+            if byte == &48 {
+                pixels[len - 1].push(false);
+            } else if byte == &49 {
+                pixels[len - 1].push(true);
+            }
+        }
+    }
+
+    NetPBM {
+        class: NetPBMFile {
+            width,
+            height,
+            pixels,
+        },
     }
 }
