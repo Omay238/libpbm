@@ -490,22 +490,20 @@ pub fn load_pbm(path: &str) -> NetPBM<NetPBMFile> {
         let line: Vec<_> = file_iter.by_ref().take_while(|x| x != &&10).collect();
         let mut split = line.split(|x| x == &&32);
 
-        if let Some(w) = split.next() {
-            if let Ok(w_var) = String::from_utf8(w.iter().copied().copied().collect())
+        if let Some(w) = split.next()
+            && let Ok(w_var) = String::from_utf8(w.iter().copied().copied().collect())
                 .unwrap()
                 .parse::<usize>()
-            {
-                width = Some(w_var);
-            }
+        {
+            width = Some(w_var);
         }
 
-        if let Some(h) = split.next() {
-            if let Ok(h_var) = String::from_utf8(h.iter().copied().copied().collect())
+        if let Some(h) = split.next()
+            && let Ok(h_var) = String::from_utf8(h.iter().copied().copied().collect())
                 .unwrap()
                 .parse::<usize>()
-            {
-                height = Some(h_var);
-            }
+        {
+            height = Some(h_var);
         }
     }
 
@@ -593,22 +591,20 @@ pub fn load_pgm(path: &str) -> NetPBM<NetPGMFile> {
         let line: Vec<_> = file_iter.by_ref().take_while(|x| x != &&10).collect();
         let mut split = line.split(|x| x == &&32);
 
-        if let Some(w) = split.next() {
-            if let Ok(w_var) = String::from_utf8(w.iter().copied().copied().collect())
+        if let Some(w) = split.next()
+            && let Ok(w_var) = String::from_utf8(w.iter().copied().copied().collect())
                 .unwrap()
                 .parse::<usize>()
-            {
-                width = Some(w_var);
-            }
+        {
+            width = Some(w_var);
         }
 
-        if let Some(h) = split.next() {
-            if let Ok(h_var) = String::from_utf8(h.iter().copied().copied().collect())
+        if let Some(h) = split.next()
+            && let Ok(h_var) = String::from_utf8(h.iter().copied().copied().collect())
                 .unwrap()
                 .parse::<usize>()
-            {
-                height = Some(h_var);
-            }
+        {
+            height = Some(h_var);
         }
     }
 
@@ -622,9 +618,9 @@ pub fn load_pgm(path: &str) -> NetPBM<NetPGMFile> {
             .copied()
             .collect(),
     )
-        .unwrap()
-        .parse()
-        .unwrap();
+    .unwrap()
+    .parse()
+    .unwrap();
 
     let mut pixels = vec![vec![]];
     let mut num_bits: usize = 0;
@@ -646,7 +642,7 @@ pub fn load_pgm(path: &str) -> NetPBM<NetPGMFile> {
                 if num_bits % 2 == 1 {
                     temp = (*byte as u16) << 8;
                 } else {
-                    temp = temp + *byte as u16;
+                    temp += *byte as u16;
                     pixels[len - 1].push(temp);
                 }
             } else {
@@ -700,22 +696,20 @@ pub fn load_ppm(path: &str) -> NetPBM<NetPPMFile> {
         let line: Vec<_> = file_iter.by_ref().take_while(|x| x != &&10).collect();
         let mut split = line.split(|x| x == &&32);
 
-        if let Some(w) = split.next() {
-            if let Ok(w_var) = String::from_utf8(w.iter().copied().copied().collect())
+        if let Some(w) = split.next()
+            && let Ok(w_var) = String::from_utf8(w.iter().copied().copied().collect())
                 .unwrap()
                 .parse::<usize>()
-            {
-                width = Some(w_var);
-            }
+        {
+            width = Some(w_var);
         }
 
-        if let Some(h) = split.next() {
-            if let Ok(h_var) = String::from_utf8(h.iter().copied().copied().collect())
+        if let Some(h) = split.next()
+            && let Ok(h_var) = String::from_utf8(h.iter().copied().copied().collect())
                 .unwrap()
                 .parse::<usize>()
-            {
-                height = Some(h_var);
-            }
+        {
+            height = Some(h_var);
         }
     }
 
@@ -729,9 +723,9 @@ pub fn load_ppm(path: &str) -> NetPBM<NetPPMFile> {
             .copied()
             .collect(),
     )
-        .unwrap()
-        .parse()
-        .unwrap();
+    .unwrap()
+    .parse()
+    .unwrap();
 
     let mut pixels = vec![vec![]];
     let mut num_bits: usize = 0;
@@ -754,7 +748,7 @@ pub fn load_ppm(path: &str) -> NetPBM<NetPPMFile> {
                 if num_bits % 2 == 1 {
                     temp[idx] = (*byte as u16) << 8;
                 } else {
-                    temp[idx] = temp[idx] + *byte as u16;
+                    temp[idx] += *byte as u16;
                     idx += 1;
                 }
             } else {
