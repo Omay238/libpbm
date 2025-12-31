@@ -482,7 +482,7 @@ pub fn load_pbm(path: &str) -> NetPBM<NetPBMFile> {
     let file = std::fs::read(path).unwrap();
     let mut file_iter = file.iter();
 
-    let is_binary = file.starts_with(b"P4");
+    let is_binary = file_iter.by_ref().take(2).eq(b"P4");
     let mut width = None;
     let mut height = None;
 
@@ -517,7 +517,7 @@ pub fn load_pbm(path: &str) -> NetPBM<NetPBMFile> {
 
     if is_binary {
         for byte in file_iter {
-            if num_bits > width {
+            if num_bits > width && pixels.len() < height {
                 pixels.push(vec![]);
                 num_bits = 0;
             } else {
@@ -553,7 +553,7 @@ pub fn load_pbm(path: &str) -> NetPBM<NetPBMFile> {
         }
     } else {
         for byte in file_iter {
-            if num_bits > width {
+            if num_bits > width && pixels.len() < height {
                 pixels.push(vec![]);
                 num_bits = 0;
             } else {
@@ -574,6 +574,113 @@ pub fn load_pbm(path: &str) -> NetPBM<NetPBMFile> {
         class: NetPBMFile {
             width,
             height,
+            pixels,
+        },
+    }
+}
+
+/// load a pgm file from a path.
+/// either P2 or P5
+pub fn load_pgm(path: &str) -> NetPBM<NetPGMFile> {
+    let file = std::fs::read(path).unwrap();
+    let mut file_iter = file.iter();
+
+    let is_binary = file_iter.by_ref().take(2).eq(b"P5");
+    let mut width = None;
+    let mut height = None;
+
+    while width.is_none() || height.is_none() {
+        let line: Vec<_> = file_iter.by_ref().take_while(|x| x != &&10).collect();
+        let mut split = line.split(|x| x == &&32);
+
+        if let Some(w) = split.next() {
+            if let Ok(w_var) = String::from_utf8(w.iter().copied().copied().collect())
+                .unwrap()
+                .parse::<usize>()
+            {
+                width = Some(w_var);
+            }
+        }
+
+        if let Some(h) = split.next() {
+            if let Ok(h_var) = String::from_utf8(h.iter().copied().copied().collect())
+                .unwrap()
+                .parse::<usize>()
+            {
+                height = Some(h_var);
+            }
+        }
+    }
+
+    let width = width.unwrap();
+    let height = height.unwrap();
+
+    let max_val = String::from_utf8(
+        file_iter
+            .by_ref()
+            .take_while(|x| x != &&10)
+            .copied()
+            .collect(),
+    )
+        .unwrap()
+        .parse()
+        .unwrap();
+
+    let mut pixels = vec![vec![]];
+    let mut num_bits: usize = 0;
+
+    let mut temp = 0;
+
+    if is_binary {
+        for byte in file_iter {
+            if num_bits > width * if max_val > 255 { 2 } else { 1 } && pixels.len() < height {
+                pixels.push(vec![]);
+                num_bits = 0;
+            } else {
+                num_bits += 1;
+            }
+
+            let len = pixels.len();
+
+            if max_val > 255 {
+                if num_bits % 2 == 1 {
+                    temp = (*byte as u16) << 8;
+                } else {
+                    temp = temp + *byte as u16;
+                    pixels[len - 1].push(temp);
+                }
+            } else {
+                pixels[len - 1].push(*byte as u16);
+            }
+        }
+    } else {
+        for word in String::from_utf8(file_iter.copied().collect::<Vec<u8>>())
+            .unwrap()
+            .split_whitespace()
+            .collect::<Vec<&str>>()
+        {
+            if num_bits >= width && pixels.len() < height {
+                pixels.push(vec![]);
+                num_bits = 0;
+            } else {
+                num_bits += 1;
+            }
+
+            let len = pixels.len();
+
+            if let Ok(num) = word.parse() {
+                pixels[len - 1].push(num);
+            } else {
+                num_bits -= 1;
+            }
+        }
+    }
+
+    NetPBM {
+        class: NetPGMFile {
+            width,
+            height,
+            max_val,
             pixels,
         },
     }

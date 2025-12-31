@@ -34,7 +34,7 @@ fn main() {
     ppm.save_raw("raw.ppm").unwrap();
 
     let s = 512;
-    let mut big_ppm = NetPAM::new(s, s, 65535, TupleType::RGB);
+    let mut big_pam = NetPAM::new(s, s, 65535, TupleType::RGB);
     for x in 0..s {
         for y in 0..s {
             let dx = x as i32 - (s / 2) as i32;
@@ -75,13 +75,18 @@ fn main() {
                 ((color_1[2] + m) * 65535.0) as u16,
             ];
 
-            big_ppm.set_pixel(x, y, color.to_vec());
+            big_pam.set_pixel(x, y, color.to_vec());
         }
     }
-    big_ppm.save_raw("big.pam").unwrap();
+    big_pam.save_raw("big.pam").unwrap();
 
-    let loaded = load_pbm("images/raw.pbm");
+    let loaded = load_pbm("ascii.pbm");
     loaded.save_ascii("ascii.pbm", None).unwrap();
-    let loaded = load_pbm("images/ascii.pbm");
+    let loaded = load_pbm("raw.pbm");
     loaded.save_raw("raw.pbm").unwrap();
+
+    let loaded = load_pgm("ascii.pgm");
+    loaded.save_ascii("ascii.pgm", None).unwrap();
+    let loaded = load_pgm("raw.pgm");
+    loaded.save_raw("raw.pgm").unwrap();
 }
