@@ -349,6 +349,39 @@ pub enum TupleType {
     GrayscaleAlpha,
     /// like NetPPM, but with transparency.
     RGBAlpha,
+    /// allows for custom extensible formats to NetPAM.
+    Custom {
+        /// the quantity of bytes per pixel.
+        depth: u16,
+        /// the name used in the header. SHOULD BE UNIQUE!
+        tuple_type: &'static str,
+    }
+}
+
+impl TupleType {
+    fn get_depth(&self) -> u16 {
+        match self {
+            TupleType::BlackAndWhite => 1,
+            TupleType::Grayscale => 1,
+            TupleType::RGB => 3,
+            TupleType::BlackAndWhiteAlpha => 2,
+            TupleType::GrayscaleAlpha => 2,
+            TupleType::RGBAlpha => 4,
+            TupleType::Custom { depth, .. } => *depth,
+        }
+    }
+
+    fn get_tuple_type(&self) -> &str {
+        match self {
+            TupleType::BlackAndWhite => "BLACKANDWHITE",
+            TupleType::Grayscale => "GRAYSCALE",
+            TupleType::RGB => "RGB",
+            TupleType::BlackAndWhiteAlpha => "BLACKANDWHITE_ALPHA",
+            TupleType::GrayscaleAlpha => "GRAYSCALE_ALPHA",
+            TupleType::RGBAlpha => "RGB_ALPHA",
+            TupleType::Custom { tuple_type, .. } => tuple_type,
+        }
+    }
 }
 
 /// type for NetPAM files.
@@ -364,15 +397,7 @@ pub struct NetPAM {
 impl NetPAM {
     /// create a new NetPAM image
     pub fn new(width: usize, height: usize, max_val: u16, tuple_type: TupleType) -> Self {
-        let depth = match tuple_type {
-            TupleType::BlackAndWhite => 1,
-            TupleType::Grayscale => 1,
-            TupleType::RGB => 3,
-            TupleType::BlackAndWhiteAlpha => 2,
-            TupleType::GrayscaleAlpha => 2,
-            TupleType::RGBAlpha => 4,
-        };
-
+        let depth = tuple_type.get_depth() as usize;
         let pixels = vec![vec![vec![0; depth]; width]; height];
 
         Self {
@@ -424,14 +449,7 @@ impl NetPAM {
                 self.height,
                 self.depth,
                 self.max_val,
-                match self.tuple_type {
-                    TupleType::BlackAndWhite => "BLACKANDWHITE",
-                    TupleType::Grayscale => "GRAYSCALE",
-                    TupleType::RGB => "RGB",
-                    TupleType::BlackAndWhiteAlpha => "BLACKANDWHITE_ALPHA",
-                    TupleType::GrayscaleAlpha => "GRAYSCALE_ALPHA",
-                    TupleType::RGBAlpha => "RGB_ALPHA",
-                },
+                self.tuple_type.get_tuple_type(),
             )
             .as_bytes(),
             &self
