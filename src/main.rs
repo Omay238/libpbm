@@ -89,4 +89,9 @@ fn main() {
     loaded.save_ascii("ascii.pgm", None).unwrap();
     let loaded = load_pgm("raw.pgm");
     loaded.save_raw("raw.pgm").unwrap();
+
+    let loaded = load_ppm("ascii.ppm");
+    loaded.save_ascii("ascii.ppm", None).unwrap();
+    let loaded = load_ppm("raw.ppm");
+    loaded.save_raw("raw.ppm").unwrap();
 }
