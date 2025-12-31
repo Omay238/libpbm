@@ -698,16 +698,16 @@ pub fn load_ppm(path: &str) -> NetPBM<NetPPMFile> {
 
         if let Some(w) = split.next()
             && let Ok(w_var) = String::from_utf8(w.iter().copied().copied().collect())
-                .unwrap()
-                .parse::<usize>()
+            .unwrap()
+            .parse::<usize>()
         {
             width = Some(w_var);
         }
 
         if let Some(h) = split.next()
             && let Ok(h_var) = String::from_utf8(h.iter().copied().copied().collect())
-                .unwrap()
-                .parse::<usize>()
+            .unwrap()
+            .parse::<usize>()
         {
             height = Some(h_var);
         }
@@ -723,9 +723,9 @@ pub fn load_ppm(path: &str) -> NetPBM<NetPPMFile> {
             .copied()
             .collect(),
     )
-    .unwrap()
-    .parse()
-    .unwrap();
+        .unwrap()
+        .parse()
+        .unwrap();
 
     let mut pixels = vec![vec![]];
     let mut num_bits: usize = 0;
@@ -796,5 +796,28 @@ pub fn load_ppm(path: &str) -> NetPBM<NetPPMFile> {
             max_val,
             pixels,
         },
+    }
+}
+
+/// load a pam file from a path.
+/// must be P7
+pub fn load_pam(path: &str) -> NetPAM {
+    let file = std::fs::read(path).unwrap();
+    let mut file_iter = file.iter();
+
+    let _magic = file_iter.by_ref().take_while(|x| x != &&10);
+    let width = file_iter.by_ref().take_while(|x| x != &&10);
+    let height = file_iter.by_ref().take_while(|x| x != &&10);
+    let depth = file_iter.by_ref().take_while(|x| x != &&10);
+    let max_val = file_iter.by_ref().take_while(|x| x != &&10);
+    let tuple_type = file_iter.by_ref().take_while(|x| x != &&10);
+
+    NetPAM{
+        width: 0,
+        height: 0,
+        depth: 0,
+        max_val: 0,
+        tuple_type: TupleType::BlackAndWhite,
+        pixels: vec![],
     }
 }

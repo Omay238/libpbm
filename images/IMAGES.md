@@ -35,4 +35,4 @@ it's exactly the same size as the above.
 
 ## color wheel
 this was generated with rust code, as with the rest of these.  
-[![color wheel](big.png)](big.ppm)
+[![color wheel](big.pam.png)](big.pam)
